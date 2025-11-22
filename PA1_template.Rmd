@@ -1,11 +1,8 @@
 ---
-title: 'Reproducible Research: Peer Assessment 1'
-output:
-  html_document:
-    df_print: paged
-header-includes:
-- \usepackage[english]{babel}
-- \usepackage{lmodern}
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  pdf_document:
+    keep_md: true
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
