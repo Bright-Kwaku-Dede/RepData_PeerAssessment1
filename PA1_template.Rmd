@@ -1,76 +1,88 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: html_document
+title: 'Reproducible Research: Peer Assessment 1'
+output:
+  html_document:
+    df_print: paged
+header-includes:
+- \usepackage[english]{babel}
+- \usepackage{lmodern}
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+```
+```{r load}
 activity <- read.csv("activity.csv")
 activity$date <- as.Date(activity$date)
 head(activity)
-library(dplyr)
-
+```
+```{r total-steps}
 total_steps_per_day <- activity %>%
-group_by(date) %>%
-summarize(total_steps = sum(steps, na.rm = TRUE))
+  group_by(date) %>%
+  summarize(total_steps = sum(steps, na.rm = TRUE))
 
 hist(total_steps_per_day$total_steps,
-main = "Total Steps Per Day",
-xlab = "Steps",
-col = "skyblue")
+     main = "Total Steps Per Day",
+     xlab = "Steps",
+     col = "skyblue")
 
 mean_steps <- mean(total_steps_per_day$total_steps, na.rm = TRUE)
 median_steps <- median(total_steps_per_day$total_steps, na.rm = TRUE)
 
 mean_steps
 median_steps
+```
+```{r avg-interval}
 avg_interval <- activity %>%
-group_by(interval) %>%
-summarize(mean_steps = mean(steps, na.rm = TRUE))
+  group_by(interval) %>%
+  summarize(mean_steps = mean(steps, na.rm = TRUE))
 
 plot(avg_interval$interval, avg_interval$mean_steps,
-type = "l",
-main = "Average Steps per 5-Min Interval",
-xlab = "Interval",
-ylab = "Steps")
+     type = "l",
+     main = "Average Steps per 5-Min Interval",
+     xlab = "Interval",
+     ylab = "Steps")
 
 max_interval <- avg_interval$interval[which.max(avg_interval$mean_steps)]
 max_interval
+```
+```{r imputation}
 sum(is.na(activity$steps))
-
-# Strategy: replace missing steps with the mean for that interval
 
 imputed_activity <- activity
 for (i in 1:nrow(imputed_activity)) {
-if (is.na(imputed_activity$steps[i])) {
-interval_value <- imputed_activity$interval[i]
-imputed_activity$steps[i] <- avg_interval$mean_steps[avg_interval$interval == interval_value]
-}
+  if (is.na(imputed_activity$steps[i])) {
+    interval_value <- imputed_activity$interval[i]
+    imputed_activity$steps[i] <- avg_interval$mean_steps[avg_interval$interval == interval_value]
+  }
 }
 
 sum(is.na(imputed_activity$steps))
+
 total_steps_imputed <- imputed_activity %>%
-group_by(date) %>%
-summarize(total_steps = sum(steps))
+  group_by(date) %>%
+  summarize(total_steps = sum(steps))
 
 hist(total_steps_imputed$total_steps,
-main = "Total Steps Per Day (Imputed)",
-xlab = "Steps",
-col = "orange")
+     main = "Total Steps Per Day (Imputed)",
+     xlab = "Steps",
+     col = "orange")
 
 mean(total_steps_imputed$total_steps)
 median(total_steps_imputed$total_steps)
+```
+```{r weekday-weekend}
 imputed_activity$daytype <- ifelse(weekdays(imputed_activity$date) %in%
-c("Saturday", "Sunday"),
-"weekend", "weekday")
+                                     c("Saturday", "Sunday"),
+                                   "weekend", "weekday")
 
 avg_daytype <- imputed_activity %>%
-group_by(daytype, interval) %>%
-summarize(mean_steps = mean(steps))
-
-library(ggplot2)
+  group_by(daytype, interval) %>%
+  summarize(mean_steps = mean(steps))
 
 ggplot(avg_daytype, aes(interval, mean_steps)) +
-geom_line() +
-facet_wrap(~ daytype, nrow = 2, ncol = 1) +
-labs(title = "Activity Pattern: Weekday vs Weekend")
+  geom_line() +
+  facet_wrap(~ daytype, nrow = 2, ncol = 1) +
+  labs(title = "Activity Pattern: Weekday vs Weekend")
+```
